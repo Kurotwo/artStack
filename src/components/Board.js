@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import './board.css';
 
@@ -7,6 +7,8 @@ const Board = () => {
   const canvasRef = useRef(null);
   const colorsRef = useRef(null);
   const socketRef = useRef();
+
+  const [brushSize, setBrushSize] = useState(2)
 
   useEffect(() => {
 
@@ -44,7 +46,7 @@ const Board = () => {
       context.moveTo(x0, y0);
       context.lineTo(x1, y1);
       context.strokeStyle = color;
-      context.lineWidth = 2;
+      context.lineWidth = brushSize;
       context.stroke();
       context.closePath();
 
@@ -142,6 +144,11 @@ const Board = () => {
         <div className="color green" />
         <div className="color blue" />
         <div className="color yellow" />
+      </div>
+      <div class="slidecontainer">
+        <input type="range" min="1" max="100" value="2" class="slider" id="myRange" onInput={(e) => {
+          this.setBrushSize(e.target.value)
+        }} />
       </div>
     </div>
   );
