@@ -8,7 +8,11 @@ const RECTANGLE_MODE = "rect_mode";
 const TRIANGLE_MODE = "triangle_mode";
 const ELLIPSE_MODE = "ellipse_mode";
 
+const CANVAS_HEIGHT = 640;
+const CANVAS_WIDTH = 1000; 
+
 const Canvas = (props) => {
+  const canvasObject = useRef(null);
   const shapeStart = useRef({x : 0, y : 0});
   const [drawMode, setDrawMode] = useState(BRUSH_MODE)
   const [isDragging, setIsDragging] = useState(false)
@@ -16,8 +20,8 @@ const Canvas = (props) => {
   const setup = (p5, canvasParentRef) => {
     // use parent to render the canvas in this ref
     // (without that p5 will render the canvas outside of your component)
-    p5.createCanvas(1000, 640).parent('canvas-layout');
-    p5.background(255)
+    canvasObject.current = p5.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT).parent('canvas-layout');
+    p5.background(255);
 
     socket = io.connect('/');
     socket.on('drawing', data => newDrawing(p5,data));
@@ -28,13 +32,13 @@ const Canvas = (props) => {
       var data = {
         x: p5.mouseX,
         y: p5.mouseY,
-        color: 255,
+        color: 0,
         mode: BRUSH_MODE
       };
 
       socket.emit('drawing', data);
       p5.noStroke();
-      p5.fill(255);
+      p5.fill(0);
       p5.ellipse(p5.mouseX, p5.mouseY, 10, 10);
     }
   }
@@ -62,7 +66,7 @@ const Canvas = (props) => {
           y: shapeStart.current.y,
           width: width,
           height: height,
-          color: 255,
+          color: 0,
           mode: RECTANGLE_MODE
         };
         // Emit the new object
@@ -86,7 +90,7 @@ const Canvas = (props) => {
           y2: y2, 
           x3: p5.mouseX,
           y3: p5.mouseY,
-          color: 255,
+          color: 0,
           mode: TRIANGLE_MODE
         };
         // Emit the new object
@@ -106,7 +110,7 @@ const Canvas = (props) => {
           y: y,
           width: width,
           height: height,
-          color: 255,
+          color: 0,
           mode: ELLIPSE_MODE
         };
         // Emit the new object
@@ -143,6 +147,28 @@ const Canvas = (props) => {
     }
   }
 
+  const windowResized = (p5) => {
+    var newHeight = CANVAS_HEIGHT;
+    var newWidth = CANVAS_WIDTH;
+    if (window.innerWidth < newWidth) {
+      newWidth = window.innerWidth;
+      newHeight = newHeight / (CANVAS_WIDTH / newWidth);
+    }
+
+    let resized = p5.createGraphics(newWidth, newHeight);
+
+    //Draw and scale the canvas content
+    resized.image(canvasObject.current, 0, 0, newWidth, newHeight);
+    
+    //Manipulate the new pixels array
+    resized.loadPixels();
+    
+    p5.resizeCanvas(newWidth, newHeight, true);
+    p5.background(255);
+
+    p5.image(resized, 0, 0);
+  }
+
   return (
     <div>
       <Sketch 
@@ -150,7 +176,8 @@ const Canvas = (props) => {
         draw={draw} 
         mousePressed={mousePressed}
         mouseDragged={mouseDragged}
-        mouseReleased={mouseReleased}/>
+        mouseReleased={mouseReleased}
+        windowResized={windowResized}/>
       <select onChange={(event) => setDrawMode(event.target.value)}>
         <option value={BRUSH_MODE}>Brush</option>
         <option value={RECTANGLE_MODE}>Rectangle</option>
