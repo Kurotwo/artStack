@@ -3,13 +3,11 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-
-import Board from './components/Board.js';
-import Canvas from './components/Canvas.js'
+import 'antd/dist/antd.css';
 
 ReactDOM.render(
   <React.StrictMode>
-    <Canvas></Canvas>
+    <App />
   </React.StrictMode>,
   document.getElementById('root')
 );

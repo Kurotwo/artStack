@@ -4,12 +4,12 @@ import io from "socket.io-client";
 
 let socket;
 
-const canvas = (props) => {
+const Canvas = (props) => {
   const setup = (p5, canvasParentRef) => {
     // use parent to render the canvas in this ref
     // (without that p5 will render the canvas outside of your component)
-    p5.createCanvas(500, 500).parent(canvasParentRef);
-    p5.background(51)
+    p5.createCanvas(1000, 640).parent('canvas-layout');
+    p5.background(255)
 
     socket = io.connect('/')
     socket.on('drawing', data => newDrawing(p5,data))
@@ -25,7 +25,7 @@ const canvas = (props) => {
     socket.emit('drawing', data)
 
     p5.noStroke()
-    p5.fill(255)
+    p5.fill(0)
     p5.ellipse(p5.mouseX, p5.mouseY, 36, 36)
   }
 
@@ -51,4 +51,4 @@ const canvas = (props) => {
   return <Sketch setup={setup} draw={draw} mouseDragged={mouseDragged} />;
 };
 
-export default canvas;
+export default Canvas;
