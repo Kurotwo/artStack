@@ -1,60 +1,62 @@
-import React, { useRef, useEffect, useState } from 'react';
-import io from 'socket.io-client';
-import './board.css';
-
+import React, { useRef, useEffect, useState } from "react";
+import io from "socket.io-client";
+import "./board.css";
+import InputRange from "react-input-range";
+import "react-input-range/lib/css/index.css";
 
 const Board = () => {
   const canvasRef = useRef(null);
   const colorsRef = useRef(null);
   const socketRef = useRef();
 
-  const [brushSize, setBrushSize] = useState(2)
+  const [brushSize, setBrushSize] = useState(2);
 
   useEffect(() => {
-
     // --------------- getContext() method returns a drawing context on the canvas-----
 
     const canvas = canvasRef.current;
     const test = colorsRef.current;
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext("2d");
 
     // ----------------------- Colors --------------------------------------------------
 
-    const colors = document.getElementsByClassName('color');
-    console.log(colors, 'the colors');
+    const colors = document.getElementsByClassName("color");
+    console.log(colors, "the colors");
     console.log(test);
     // set the current color
     const current = {
-      color: 'black',
+      color: "black",
     };
 
     // helper that will update the current color
     const onColorUpdate = (e) => {
-      current.color = e.target.className.split(' ')[1];
+      current.color = e.target.className.split(" ")[1];
     };
 
     // loop through the color elements and add the click event listeners
     for (let i = 0; i < colors.length; i++) {
-      colors[i].addEventListener('click', onColorUpdate, false);
+      colors[i].addEventListener("click", onColorUpdate, false);
     }
     let drawing = false;
 
     // ------------------------------- create the drawing ----------------------------
 
-    const drawLine = (x0, y0, x1, y1, color, emit) => {
+    const drawLine = (x0, y0, x1, y1, color, size, emit) => {
       context.beginPath();
       context.moveTo(x0, y0);
       context.lineTo(x1, y1);
       context.strokeStyle = color;
-      context.lineWidth = brushSize;
+      context.lineWidth = size;
       context.stroke();
       context.closePath();
 
-      if (!emit) { return; }
+      if (!emit) {
+        return;
+      }
       const w = canvas.width;
       const h = canvas.height;
 
-      socketRef.current.emit('drawing', {
+      socketRef.current.emit("drawing", {
         x0: x0 / w,
         y0: y0 / h,
         x1: x1 / w,
@@ -72,26 +74,46 @@ const Board = () => {
     };
 
     const onMouseMove = (e) => {
-      if (!drawing) { return; }
-      drawLine(current.x, current.y, e.clientX || e.touches[0].clientX, e.clientY || e.touches[0].clientY, current.color, true);
+      if (!drawing) {
+        return;
+      }
+      drawLine(
+        current.x,
+        current.y,
+        e.clientX || e.touches[0].clientX,
+        e.clientY || e.touches[0].clientY,
+        current.color,
+        brushSize,
+        true
+      );
       current.x = e.clientX || e.touches[0].clientX;
       current.y = e.clientY || e.touches[0].clientY;
     };
 
     const onMouseUp = (e) => {
-      if (!drawing) { return; }
+      if (!drawing) {
+        return;
+      }
       drawing = false;
-      drawLine(current.x, current.y, e.clientX || e.touches[0].clientX, e.clientY || e.touches[0].clientY, current.color, true);
+      drawLine(
+        current.x,
+        current.y,
+        e.clientX || e.touches[0].clientX,
+        e.clientY || e.touches[0].clientY,
+        current.color,
+        brushSize,
+        true
+      );
     };
 
     // ----------- limit the number of events per second -----------------------
 
     const throttle = (callback, delay) => {
       let previousCall = new Date().getTime();
-      return function() {
+      return function () {
         const time = new Date().getTime();
 
-        if ((time - previousCall) >= delay) {
+        if (time - previousCall >= delay) {
           previousCall = time;
           callback.apply(null, arguments);
         }
@@ -100,16 +122,16 @@ const Board = () => {
 
     // -----------------add event listeners to our canvas ----------------------
 
-    canvas.addEventListener('mousedown', onMouseDown, false);
-    canvas.addEventListener('mouseup', onMouseUp, false);
-    canvas.addEventListener('mouseout', onMouseUp, false);
-    canvas.addEventListener('mousemove', throttle(onMouseMove, 10), false);
+    canvas.addEventListener("mousedown", onMouseDown, false);
+    canvas.addEventListener("mouseup", onMouseUp, false);
+    canvas.addEventListener("mouseout", onMouseUp, false);
+    canvas.addEventListener("mousemove", throttle(onMouseMove, 10), false);
 
     // Touch support for mobile devices
-    canvas.addEventListener('touchstart', onMouseDown, false);
-    canvas.addEventListener('touchend', onMouseUp, false);
-    canvas.addEventListener('touchcancel', onMouseUp, false);
-    canvas.addEventListener('touchmove', throttle(onMouseMove, 10), false);
+    canvas.addEventListener("touchstart", onMouseDown, false);
+    canvas.addEventListener("touchend", onMouseUp, false);
+    canvas.addEventListener("touchcancel", onMouseUp, false);
+    canvas.addEventListener("touchmove", throttle(onMouseMove, 10), false);
 
     // -------------- make the canvas fill its parent component -----------------
 
@@ -118,7 +140,7 @@ const Board = () => {
       canvas.height = window.innerHeight;
     };
 
-    window.addEventListener('resize', onResize, false);
+    window.addEventListener("resize", onResize, false);
     onResize();
 
     // ----------------------- socket.io connection ----------------------------
@@ -126,29 +148,34 @@ const Board = () => {
       const w = canvas.width;
       const h = canvas.height;
       drawLine(data.x0 * w, data.y0 * h, data.x1 * w, data.y1 * h, data.color);
-    }
+    };
 
-    socketRef.current = io.connect('/');
-    socketRef.current.on('drawing', onDrawingEvent);
-  }, []);
+    socketRef.current = io.connect("/");
+    socketRef.current.on("drawing", onDrawingEvent);
+  }, [brushSize]);
 
   // ------------- The Canvas and color elements --------------------------
 
   return (
     <div>
       <canvas ref={canvasRef} className="whiteboard" />
-
-      <div ref={colorsRef} className="colors">
-        <div className="color black" />
-        <div className="color red" />
-        <div className="color green" />
-        <div className="color blue" />
-        <div className="color yellow" />
-      </div>
-      <div class="slidecontainer">
-        <input type="range" min="1" max="100" value="2" class="slider" id="myRange" onInput={(e) => {
-          this.setBrushSize(e.target.value)
-        }} />
+      <div className="toolbar">
+        <div ref={colorsRef} className="colors">
+          <div className="color black" />
+          <div className="color red" />
+          <div className="color green" />
+          <div className="color blue" />
+          <div className="color yellow" />
+        </div>
+        <div className="input-range-container">
+          <InputRange
+            maxValue={100}
+            minValue={0}
+            value={brushSize}
+            onChange={(value) => setBrushSize(value)}
+            onChangeComplete={(value) => console.log(value)}
+          ></InputRange>
+        </div>
       </div>
     </div>
   );
