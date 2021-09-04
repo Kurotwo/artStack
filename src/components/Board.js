@@ -7,8 +7,11 @@ const Board = () => {
   const canvasRef = useRef(null);
   const colorsRef = useRef(null);
   const socketRef = useRef();
+  const shapeStart = useRef({x: 0, y: 0});
+  const drawMode = useRef("brush");
 
-  const [brushSize, setBrushSize] = useState(2)
+  const [brushSize, setBrushSize] = useState(2);
+  
 
   useEffect(() => {
 
@@ -21,8 +24,6 @@ const Board = () => {
     // ----------------------- Colors --------------------------------------------------
 
     const colors = document.getElementsByClassName('color');
-    console.log(colors, 'the colors');
-    console.log(test);
     // set the current color
     const current = {
       color: 'black',
@@ -63,17 +64,31 @@ const Board = () => {
       });
     };
 
+    const drawRect = (x1, y1, color, emit) => {
+      context.beginPath();
+      var width = x1 - shapeStart.current.x;
+      var height = y1 - shapeStart.current.y;
+      context.rect(shapeStart.current.x, shapeStart.current.y, width,height);
+      context.strokeStyle = 'black';
+      context.lineWidth = 4;
+      context.stroke();
+    }
+
     // ---------------- mouse movement --------------------------------------
 
     const onMouseDown = (e) => {
       drawing = true;
-      current.x = e.clientX || e.touches[0].clientX;
-      current.y = e.clientY || e.touches[0].clientY;
+      current.x = e?.clientX || e.touches[0].clientX;
+      current.y = e?.clientY || e.touches[0].clientY;
+      shapeStart.current.x = e?.clientX || e.touches[0].clientX;
+      shapeStart.current.y = e?.clientY || e.touches[0].clientY;
     };
 
     const onMouseMove = (e) => {
-      if (!drawing) { return; }
-      drawLine(current.x, current.y, e.clientX || e.touches[0].clientX, e.clientY || e.touches[0].clientY, current.color, true);
+      if (!drawing) { return; } 
+      if (drawMode.current == "brush")
+        drawLine(current.x, current.y, e.clientX || e.touches[0].clientX, e.clientY || e.touches[0].clientY, current.color, true);
+      
       current.x = e.clientX || e.touches[0].clientX;
       current.y = e.clientY || e.touches[0].clientY;
     };
@@ -81,7 +96,10 @@ const Board = () => {
     const onMouseUp = (e) => {
       if (!drawing) { return; }
       drawing = false;
-      drawLine(current.x, current.y, e.clientX || e.touches[0].clientX, e.clientY || e.touches[0].clientY, current.color, true);
+      if (drawMode.current == "brush")
+        drawLine(current.x, current.y, e?.clientX || e.touches[0].clientX, e?.clientY || e.touches[0].clientY, current.color, true);
+      else if (drawMode.current == "rectangle")
+        drawRect(e?.clientX || e.touches[0].clientX, e?.clientY || e.touches[0].clientY, current.color, true);
     };
 
     // ----------- limit the number of events per second -----------------------
