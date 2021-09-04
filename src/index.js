@@ -5,10 +5,11 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 
 import Board from './components/Board.js';
+import Canvas from './components/Canvas.js'
 
 ReactDOM.render(
   <React.StrictMode>
-    <Board />
+    <Canvas></Canvas>
   </React.StrictMode>,
   document.getElementById('root')
 );
