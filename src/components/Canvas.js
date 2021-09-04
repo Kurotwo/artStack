@@ -59,8 +59,8 @@ const Canvas = (props) => {
         p5.rect(shapeStart.current.x, shapeStart.current.y, width, height);
         // Create rectangle object to be redrawn by other users
         var data = {
-          x: p5.mouseX,
-          y: p5.mouseY,
+          x: shapeStart.current.x,
+          y: shapeStart.current.y,
           width: width,
           height: height,
           color: 255,
