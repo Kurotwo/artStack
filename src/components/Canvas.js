@@ -3,7 +3,6 @@ import Sketch from "react-p5";
 import io from "socket.io-client";
 
 let socket;
-
 const BRUSH_MODE = "brush_mode";
 const RECTANGLE_MODE = "rect_mode";
 const TRIANGLE_MODE = "triangle_mode";
@@ -17,8 +16,8 @@ const Canvas = (props) => {
   const setup = (p5, canvasParentRef) => {
     // use parent to render the canvas in this ref
     // (without that p5 will render the canvas outside of your component)
-    p5.createCanvas(500, 500).parent(canvasParentRef);
-    p5.background(51);
+    p5.createCanvas(1000, 640).parent('canvas-layout');
+    p5.background(255)
 
     socket = io.connect('/');
     socket.on('drawing', data => newDrawing(p5,data));
