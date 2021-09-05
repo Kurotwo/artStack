@@ -54,7 +54,7 @@ const ELLIPSE    = "ellipse";
 const Landing = () => {
   const [brushSize, setBrushSize] = useState(25);
   const [visible, setVisible] = useState(false);
-  const [color, setColor] = useState({ r: 0, g: 0, b: 0 });
+  const [color, setColor] = useState({ r: 0, g: 0, b: 0, a: 1 });
   const [shape, setShape] = useState("");
   const [mode, setMode] = useState(BRUSH_MODE);
 
