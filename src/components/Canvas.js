@@ -25,6 +25,12 @@ const Canvas = (props) => {
 
     socket = io.connect('/');
     socket.on('drawing', data => newDrawing(p5,data));
+    socket.on('updatecanvas', data => {
+      for (var i = 0; i < data.canvasDrawings.length; i++) {
+        console.log(data.canvasDrawings[i]);
+        newDrawing(p5, data.canvasDrawings[i]);
+      }
+    });
   };
 
   const mouseDragged = (p5, event) => {

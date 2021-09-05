@@ -13,9 +13,17 @@ app.use((req, res, next) => {
   res.sendFile(path.join(__dirname, "..", "build", "index.html"));
 });
 
+var serverCanvas = {
+  canvasDrawings: []
+};
+
 function onConnection(socket){
   console.log("Socket connected!")
-  socket.on('drawing', (data) => socket.broadcast.emit('drawing', data));
+  socket.on('drawing', (data) => {
+    serverCanvas.canvasDrawings.push(data);
+    socket.broadcast.emit('drawing', data)
+  });
+  socket.emit('updatecanvas', serverCanvas);
 }
 
 io.on('connection', onConnection);
