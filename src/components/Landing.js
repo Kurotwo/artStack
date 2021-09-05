@@ -44,12 +44,19 @@ const colorOptions = [
   "#ffffff",
 ];
 
+const BRUSH_MODE = "brush";
+const ERASER_MODE= "eraser";
+const SHAPE_MODE = "shape";
+const RECTANGLE  = "rectangle";
+const TRIANGLE   = "triangle";
+const ELLIPSE    = "ellipse";
+
 const Landing = () => {
   const [brushSize, setBrushSize] = useState(25);
   const [visible, setVisible] = useState(false);
   const [color, setColor] = useState({ r: 0, g: 0, b: 0 });
   const [shape, setShape] = useState("");
-  const [mode, setMode] = useState("brush");
+  const [mode, setMode] = useState(BRUSH_MODE);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -80,10 +87,10 @@ const Landing = () => {
           }}
           value={mode}
         >
-          <Radio.Button style={{ width: "50%" }} value="brush">
+          <Radio.Button style={{ width: "50%" }} value={BRUSH_MODE}>
             <FaBrush /> Brush
           </Radio.Button>
-          <Radio.Button style={{ width: "50%" }} value="eraser">
+          <Radio.Button style={{ width: "50%" }} value={ERASER_MODE}>
             <FaEraser /> Eraser
           </Radio.Button>
         </Radio.Group>
@@ -125,7 +132,7 @@ const Landing = () => {
           style={{ display: "flex" }}
           onChange={(e) => {
             setShape(e.target.value);
-            setMode("shape");
+            setMode(SHAPE_MODE);
           }}
           value={shape}
         >
@@ -136,7 +143,7 @@ const Landing = () => {
               display: "grid",
               placeItems: "center",
             }}
-            value="circle"
+            value={ELLIPSE}
           >
             <BsFillCircleFill width={36} />
           </Radio.Button>
@@ -147,7 +154,7 @@ const Landing = () => {
               display: "grid",
               placeItems: "center",
             }}
-            value="square"
+            value={RECTANGLE}
           >
             <BsFillSquareFill width={36} />
           </Radio.Button>
@@ -158,7 +165,7 @@ const Landing = () => {
               display: "grid",
               placeItems: "center",
             }}
-            value="triangle"
+            value={TRIANGLE}
           >
             <BsFillTriangleFill width={36} />
           </Radio.Button>
@@ -170,7 +177,7 @@ const Landing = () => {
         </Button>
       </Drawer>
       <Layout id="canvas-layout" style={{ width: "100%" }}>
-        <Canvas brushSize={brushSize} color={color} shape={shape} />
+        <Canvas brushSize={brushSize} color={color} mode={mode} shape={shape} />
       </Layout>
     </Layout>
   );
