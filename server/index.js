@@ -42,7 +42,7 @@ function onDisconnect(socket) {
 // When a new socket connects
 function onConnection(socket) {
   // Acquire shared lock 
-  lock.acquire('socket_lock', function(done) {
+  lock.acquire('socket_lock', (done) => {
     try {
       // Check if space is available
       if (socketCounter < SOCKET_MAX) {
@@ -68,7 +68,8 @@ function onConnection(socket) {
     } catch (err) {
       done(new Error(err));
     }
-  }, function(err, ret) {
+  }, (err, ret) => {
+    // If an error was encountered in connecting the socket.
     if (err) {
       console.log("ERROR: ", err);
       // Disconnect the socket in case of an error

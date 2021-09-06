@@ -61,15 +61,16 @@ const Landing = () => {
   const [shape, setShape] = useState("");
   const [mode, setMode] = useState(BRUSH_MODE);
   const user = useContext(UserContext);
-  const [redirect, setredirect] = useState(null);
+  const [redirect, setRedirect] = useState(null);
   // const history = useHistory();
 
   useEffect(() => {
     console.log(user)
     if (!user) {
-      setredirect("/");
+      setRedirect("/");
     }
   }, [user]);
+
   if (redirect) {
     return <Redirect to={redirect} />;
     // history.push(redirect)

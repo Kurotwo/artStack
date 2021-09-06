@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import Sketch from "react-p5";
 import io from "socket.io-client";
+import PropagateLoader from "react-spinners/PropagateLoader";
 
 let socket;
 const BRUSH_MODE = "brush";
@@ -10,7 +11,27 @@ const RECTANGLE  = "rectangle";
 const TRIANGLE   = "triangle";
 const ELLIPSE    = "ellipse";
 const CANVAS_HEIGHT = 640;
-const CANVAS_WIDTH = 1000; 
+const CANVAS_WIDTH = 1000;
+const SPINNER_COLOR = "#ffffff"; 
+
+const spinnerContainer = {
+  position: 'fixed',
+  height: '100%',
+  width: '100%',
+  left: 0,
+  top: 0,
+  backgroundColor: 'rgba(0,0,0,0.4)',
+  overflowX: 'hidden',
+  zIndex: 99,
+};
+
+const spinnerStyle = {
+  position: 'relative',
+  top: '40%' ,
+  width: '100%',
+  textAlign: 'center',
+  zIndex: 999,
+}
 
 const Canvas = (props) => {
   const canvasObject = useRef(null);
@@ -203,7 +224,11 @@ const Canvas = (props) => {
         mouseDragged={mouseDragged}
         mouseReleased={mouseReleased}
         windowResized={windowResized}/>
-      { isLoading && <h1>LOADING</h1>}
+      <div style={spinnerContainer}>
+        <div style={spinnerStyle}>
+          <PropagateLoader loading={isLoading} color={SPINNER_COLOR} size={20} />
+        </div>
+      </div>
     </div>
   );
 };
