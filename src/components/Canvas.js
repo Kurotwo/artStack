@@ -48,8 +48,8 @@ const Canvas = (props) => {
       socket.on('drawing', data => newDrawing(p5Ref.current,data));
       socket.on('update_canvas', data => {
         for (var i = 0; i < data.canvasDrawings.length; i++) {
-          if (i == data.canvasDrawings.length - 1) {
-            console.log("DONE");
+          if (i === data.canvasDrawings.length - 1) {
+            console.log("Canvas done updating.");
           }
           // console.log(data.canvasDrawings[i]);
           newDrawing(p5Ref.current, data.canvasDrawings[i]);
@@ -99,15 +99,16 @@ const Canvas = (props) => {
   const mouseReleased = (p5, event) => {
     if (isDragging) {
       var fillColor = `rgba(${props.color.r}, ${props.color.g}, ${props.color.b}, ${props.color.a})`;
+      var width, height, data;
       // Rectangle 
       if (props.shape === RECTANGLE) {
-        var width = p5.mouseX - shapeStart.current.x;
-        var height = p5.mouseY - shapeStart.current.y;
+        width = p5.mouseX - shapeStart.current.x;
+        height = p5.mouseY - shapeStart.current.y;
         p5.noStroke();
         p5.fill(fillColor);
         p5.rect(shapeStart.current.x, shapeStart.current.y, width, height);
         // Create rectangle object to be redrawn by other users
-        var data = {
+        data = {
           x: shapeStart.current.x,
           y: shapeStart.current.y,
           width: width,
@@ -120,8 +121,8 @@ const Canvas = (props) => {
         socket.emit('drawing', data);
       } else if (props.shape === TRIANGLE) {
       // Triangle 
-        var width = p5.mouseX - shapeStart.current.x;
-        var height = p5.mouseY - shapeStart.current.y;
+        width = p5.mouseX - shapeStart.current.x;
+        height = p5.mouseY - shapeStart.current.y;
         // Get points of the triangle
         var x1 = shapeStart.current.x;
         var x2 = shapeStart.current.x + (width / 2);
@@ -131,7 +132,7 @@ const Canvas = (props) => {
         p5.fill(fillColor);
         p5.triangle(x1, y1, x2, y2, p5.mouseX, p5.mouseY);
         // Create triangle object to be redrawn by other users
-        var data = {
+        data = {
           x1: x1,
           y1: y1, 
           x2: x2, 
@@ -146,8 +147,8 @@ const Canvas = (props) => {
         socket.emit('drawing', data);
       } else if (props.shape === ELLIPSE) {
       // Circle
-        var width = p5.mouseX - shapeStart.current.x;
-        var height = p5.mouseY - shapeStart.current.y;
+        width = p5.mouseX - shapeStart.current.x;
+        height = p5.mouseY - shapeStart.current.y;
         // Get radius center
         var x = shapeStart.current.x + (width / 2);
         var y = shapeStart.current.y + (height / 2);
@@ -155,7 +156,7 @@ const Canvas = (props) => {
         p5.fill(fillColor);
         p5.ellipse(x, y, width, height);
         // Create ellipse object to be redrawn by other users
-        var data = {
+        data = {
           x: x,
           y: y,
           width: width,
@@ -212,12 +213,6 @@ const Canvas = (props) => {
 
     p5.image(resized, 0, 0);
   }
-
-  window.addEventListener("beforeunload", (event) => 
-  {  
-    socket.emit('client_disconnect'); 
-    socket.disconnect(); 
-  });
 
   return (
     <div>

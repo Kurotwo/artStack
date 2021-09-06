@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { UserContext } from '../providers/UserProvider';
+import { SocketContext } from '../providers/SocketProvider';
 import { Redirect, useHistory } from 'react-router-dom';
 import { logOut } from "../services/firebase";
 import {
@@ -61,19 +62,45 @@ const Landing = (props) => {
   const [shape, setShape] = useState("");
   const [mode, setMode] = useState(BRUSH_MODE);
   const user = useContext(UserContext);
+  const { socket, setSocket } = useContext(SocketContext);
   const [redirect, setRedirect] = useState(null);
   // const history = useHistory();
 
   useEffect(() => {
     console.log(user)
-    if (!user) {
+    // Redirect back to login page if no user or socket connected
+    if (!user && !socket) {
+      console.log("Redirecting back to home.");
       setRedirect("/");
     }
-  }, [user]);
+  }, [user, socket]);
+
+  // // Add event listener to window on first load
+  useEffect(() => {
+    window.addEventListener('beforeunload', closeSocket);
+    window.addEventListener('unload', () => {
+      console.log("DURING:", socket);
+      if (socket) {
+        socket.emit('client_disconnect'); 
+      }
+    });
+  }, [socket]);
+
+  const closeSocket = () => {
+    console.log("BEFORE:", socket);
+    if (socket) {
+      socket.emit('client_disconnect'); 
+    }
+  }
 
   if (redirect) {
     return <Redirect to={redirect} />;
-    // history.push(redirect)
+  }
+
+  const handleLogout = () => {
+    socket.emit('client_disconnect'); 
+    setSocket(null);
+    logOut(); 
   }
   
   return (
@@ -190,7 +217,7 @@ const Landing = (props) => {
         </Radio.Group>
 
         <Divider orientation="left">Account Setting</Divider>
-        <Button block onClick={logOut}>
+        <Button block onClick={handleLogout}>
           Logout
         </Button>
       </Drawer>
