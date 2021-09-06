@@ -54,7 +54,7 @@ const RECTANGLE  = "rectangle";
 const TRIANGLE   = "triangle";
 const ELLIPSE    = "ellipse";
 
-const Landing = () => {
+const Landing = (props) => {
   const [brushSize, setBrushSize] = useState(25);
   const [visible, setVisible] = useState(false);
   const [color, setColor] = useState({ r: 0, g: 0, b: 0, a: 1 });
@@ -195,7 +195,7 @@ const Landing = () => {
         </Button>
       </Drawer>
       <Layout id="canvas-layout" style={{ width: "100%" }}>
-        <Canvas brushSize={brushSize} color={color} mode={mode} shape={shape} />
+        <Canvas brushSize={brushSize} color={color} mode={mode} shape={shape} socket={props.socket}/>
       </Layout>
     </Layout>
   );

@@ -1,9 +1,9 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect, useContext } from "react";
 import Sketch from "react-p5";
+import { SocketContext } from '../providers/SocketProvider';
 import io from "socket.io-client";
 import PropagateLoader from "react-spinners/PropagateLoader";
 
-let socket;
 const BRUSH_MODE = "brush";
 const ERASER_MODE= "eraser";
 const SHAPE_MODE = "shape";
@@ -35,34 +35,38 @@ const spinnerStyle = {
 
 const Canvas = (props) => {
   const canvasObject = useRef(null);
+  const p5Ref = useRef(null);
   const shapeStart = useRef({x : 0, y : 0});
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { socket, setSocket } = useContext(SocketContext);
+
+  // Setup socket listeners
+  useEffect(() => {
+    if (socket != null && p5Ref.current != null) {
+      console.log("creating board");
+      socket.on('drawing', data => newDrawing(p5Ref.current,data));
+      socket.on('update_canvas', data => {
+        for (var i = 0; i < data.canvasDrawings.length; i++) {
+          if (i == data.canvasDrawings.length - 1) {
+            console.log("DONE");
+          }
+          // console.log(data.canvasDrawings[i]);
+          newDrawing(p5Ref.current, data.canvasDrawings[i]);
+        }
+        setIsLoading(false);
+      });
+      socket.emit('request_canvas');
+    }
+  }, [socket]);
 
   const setup = (p5, canvasParentRef) => {
     // use parent to render the canvas in this ref
     // (without that p5 will render the canvas outside of your component)
     canvasObject.current = p5.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT).parent('canvas-layout');
     p5.background(255);
-
-    socket = io.connect('/');
-    socket.on('drawing', data => newDrawing(p5,data));
-    socket.on('update_canvas', data => {
-      for (var i = 0; i < data.canvasDrawings.length; i++) {
-        if (i == data.canvasDrawings.length - 1) {
-          console.log("DONE");
-        }
-        // console.log(data.canvasDrawings[i]);
-        newDrawing(p5, data.canvasDrawings[i]);
-      }
-      setIsLoading(false);
-    });
-    socket.on('max_users', () => {
-      console.log("MAX USERS. FAILED TO CONNECT.");
-    });
-    socket.on('server_error', () => {
-      console.log("SERVER ERROR.");
-    })
+    p5Ref.current = p5;
+    console.log(socket);
   };
 
   const mouseDragged = (p5, event) => {
@@ -224,11 +228,11 @@ const Canvas = (props) => {
         mouseDragged={mouseDragged}
         mouseReleased={mouseReleased}
         windowResized={windowResized}/>
-      <div style={spinnerContainer}>
+      {isLoading && <div style={spinnerContainer}>
         <div style={spinnerStyle}>
           <PropagateLoader loading={isLoading} color={SPINNER_COLOR} size={20} />
         </div>
-      </div>
+      </div>}
     </div>
   );
 };

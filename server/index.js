@@ -46,8 +46,6 @@ function onConnection(socket) {
     try {
       // Check if space is available
       if (socketCounter < SOCKET_MAX) {
-        console.log("Socket connected!");
-        socketCounter++;
         // Listen to sockets when they emit 'drawing' to broadcast to others
         socket.on('drawing', (data) => {
           serverCanvas.canvasDrawings.push(data);
@@ -56,7 +54,10 @@ function onConnection(socket) {
         // Listen to client disconnection
         // socket.on('client_disconnect', onDisconnect(socket));
         // For new connections, emit the current canvas to render it for new users
-        socket.emit('update_canvas', serverCanvas);
+        socket.on('request_canvas', () => {
+          console.log("Socket requested canvas.");
+          socket.emit('update_canvas', serverCanvas);
+        });
       }
       else {
         // Otherwise, inform socket of max users
@@ -64,13 +65,16 @@ function onConnection(socket) {
         socket.emit('max_users'); 
         socket.disconnect(); 
       }
-      done();
+      done("success");
     } catch (err) {
       done(new Error(err));
     }
-  }, (err, ret) => {
-    // If an error was encountered in connecting the socket.
-    if (err) {
+  }, (result) => {
+    if (result === "success") {
+      socketCounter++;
+      console.log("Socket connected!");
+    } else if (result instanceof Error) {
+      // If an error was encountered in connecting the socket.
       console.log("ERROR: ", err);
       // Disconnect the socket in case of an error
       socket.emit('server_error');

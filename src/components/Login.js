@@ -5,11 +5,14 @@ import anime from "animejs";
 import image from "../ArtStack.svg";
 import { signInWithGoogle } from "../services/firebase";
 import { UserContext } from '../providers/UserProvider';
+import { SocketContext } from '../providers/SocketProvider';
 import { Redirect, useHistory } from 'react-router-dom';
+import io from "socket.io-client";
 
-const Login = () => {
-  const user = useContext(UserContext)
-  const [redirect, setredirect] = useState(null)
+const Login = (props) => {
+  const user = useContext(UserContext);
+  const { socket, setSocket } = useContext(SocketContext);
+  const [redirect, setRedirect] = useState(null)
   // const history = useHistory();
 
   useEffect(() => {
@@ -18,7 +21,20 @@ const Login = () => {
 
   useEffect(() => {
     if (user) {
-      setredirect('/landing')
+      // TODO: add a spinner
+      var socket = io.connect('/');
+      // Check if max user count has been exceeded
+      socket.on('max_users', () => {
+        // TODO: redirect user back to login with error
+        console.log("MAX USERS. FAILED TO CONNECT.");
+      });
+      // Check if there was a server error
+      socket.on('server_error', () => {
+        // TODO: re-try establishing a connection
+        console.log("SERVER ERROR.");
+      });
+      setSocket(socket);
+      setRedirect('/landing');
     }
   }, [user])
 
