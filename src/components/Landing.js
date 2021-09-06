@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
-import { UserContext } from '../providers/UserProvider';
+import { UserContext } from "../providers/UserProvider";
 import { SocketContext } from '../providers/SocketProvider';
-import { Redirect, useHistory } from 'react-router-dom';
+import { Redirect } from "react-router-dom";
 import { logOut } from "../services/firebase";
 import {
   Layout,
@@ -15,7 +15,6 @@ import {
   Radio,
 } from "antd";
 import Canvas from "./Canvas";
-import "./landing.css";
 import { ToolFilled } from "@ant-design/icons";
 import { CirclePicker } from "react-color";
 import {
@@ -49,11 +48,11 @@ const colorOptions = [
 ];
 
 const BRUSH_MODE = "brush";
-const ERASER_MODE= "eraser";
+const ERASER_MODE = "eraser";
 const SHAPE_MODE = "shape";
-const RECTANGLE  = "rectangle";
-const TRIANGLE   = "triangle";
-const ELLIPSE    = "ellipse";
+const RECTANGLE = "rectangle";
+const TRIANGLE = "triangle";
+const ELLIPSE = "ellipse";
 
 const Landing = (props) => {
   const [brushSize, setBrushSize] = useState(25);
@@ -102,7 +101,7 @@ const Landing = (props) => {
     setSocket(null);
     logOut(); 
   }
-  
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Button
@@ -216,12 +215,21 @@ const Landing = (props) => {
           </Radio.Button>
         </Radio.Group>
 
-        <Divider orientation="left">Account Setting</Divider>
+        <Divider orientation="left">Other Setting</Divider>
         <Button block onClick={handleLogout}>
           Logout
         </Button>
+        <Button block>Save Canvas</Button>
       </Drawer>
-      <Layout id="canvas-layout" style={{ width: "100%" }}>
+      <Layout
+        id="canvas-layout"
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <Canvas brushSize={brushSize} color={color} mode={mode} shape={shape} socket={props.socket}/>
       </Layout>
     </Layout>
