@@ -51,6 +51,7 @@ const Login = (props) => {
       setTimeout(() => {
         // Disconnect the socket if there are any.
         if (socket) {
+          socket.emit("client_disconnect");
           socket.disconnect();
           setSocket(null);
         }

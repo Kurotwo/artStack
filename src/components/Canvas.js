@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useContext } from "react";
 import Sketch from "react-p5";
 import { SocketContext } from '../providers/SocketProvider';
+import { P5Context } from '../providers/P5Provider';
 import io from "socket.io-client";
 import PropagateLoader from "react-spinners/PropagateLoader";
 
@@ -40,6 +41,7 @@ const Canvas = (props) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { socket, setSocket } = useContext(SocketContext);
+  const { p5Obj, setP5Obj } = useContext(P5Context); 
 
   // Setup socket listeners
   useEffect(() => {
@@ -66,7 +68,7 @@ const Canvas = (props) => {
     canvasObject.current = p5.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT).parent('canvas-layout');
     p5.background(255);
     p5Ref.current = p5;
-    console.log(socket);
+    setP5Obj(p5);
   };
 
   const mouseDragged = (p5, event) => {
