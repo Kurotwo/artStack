@@ -93,7 +93,7 @@ const Landing = (props) => {
 
   const handleSaveCanvas = () => {
     console.log(p5Obj);
-    p5Obj.saveCanvas('animoChat');
+    p5Obj.saveCanvas();
   }
 
   return (
