@@ -1,10 +1,33 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useState, useEffect, useContext } from "react";
 import { Button } from "antd";
 import { GoogleOutlined } from "@ant-design/icons";
 import anime from "animejs";
 import image from "../ArtStack.svg";
+import { signInWithGoogle } from "../services/firebase";
+import { UserContext } from '../providers/UserProvider';
+import { Redirect, useHistory } from 'react-router-dom';
 
 const Login = () => {
+  const user = useContext(UserContext)
+  const [redirect, setredirect] = useState(null)
+  // const history = useHistory();
+
+  useEffect(() => {
+    animate();
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      setredirect('/landing')
+    }
+  }, [user])
+
+  if (redirect) {
+    console.log("redirecting to", redirect);
+    return <Redirect to={"/landing"}/>
+    // history.push(redirect)
+  }
+
   function animate() {
     const t1 = anime.timeline();
 
@@ -45,10 +68,6 @@ const Login = () => {
         offset: "-=100",
       });
   }
-
-  useEffect(() => {
-    animate();
-  }, []);
 
   return (
     <div
@@ -181,6 +200,7 @@ const Login = () => {
         size="large"
         style={{ marginTop: "3rem" }}
         icon={<GoogleOutlined />}
+        onClick={signInWithGoogle}
       >
         Sign in with Google
       </Button>

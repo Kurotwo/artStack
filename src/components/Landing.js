@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { UserContext } from '../providers/UserProvider';
+import { Redirect, useHistory } from 'react-router-dom';
+import { logOut } from "../services/firebase";
 import {
   Layout,
   Button,
@@ -50,6 +53,20 @@ const Landing = () => {
   const [color, setColor] = useState({ r: 0, g: 0, b: 0 });
   const [shape, setShape] = useState("");
   const [mode, setMode] = useState("brush");
+  const user = useContext(UserContext);
+  const [redirect, setredirect] = useState(null);
+  // const history = useHistory();
+
+  useEffect(() => {
+    console.log(user)
+    if (!user) {
+      setredirect("/");
+    }
+  }, [user]);
+  if (redirect) {
+    return <Redirect to={redirect} />;
+    // history.push(redirect)
+  }
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -165,7 +182,7 @@ const Landing = () => {
         </Radio.Group>
 
         <Divider orientation="left">Account Setting</Divider>
-        <Button block>
+        <Button block onClick={logOut}>
           Logout
         </Button>
       </Drawer>
