@@ -1,8 +1,9 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect, useContext } from "react";
 import Sketch from "react-p5";
+import { SocketContext } from '../providers/SocketProvider';
 import io from "socket.io-client";
+import PropagateLoader from "react-spinners/PropagateLoader";
 
-let socket;
 const BRUSH_MODE = "brush";
 const ERASER_MODE= "eraser";
 const SHAPE_MODE = "shape";
@@ -10,38 +11,62 @@ const RECTANGLE  = "rectangle";
 const TRIANGLE   = "triangle";
 const ELLIPSE    = "ellipse";
 const CANVAS_HEIGHT = 640;
-const CANVAS_WIDTH = 1000; 
+const CANVAS_WIDTH = 1000;
+const SPINNER_COLOR = "#ffffff"; 
+
+const spinnerContainer = {
+  position: 'fixed',
+  height: '100%',
+  width: '100%',
+  left: 0,
+  top: 0,
+  backgroundColor: 'rgba(0,0,0,0.4)',
+  overflowX: 'hidden',
+  zIndex: 99,
+};
+
+const spinnerStyle = {
+  position: 'relative',
+  top: '40%' ,
+  width: '100%',
+  textAlign: 'center',
+  zIndex: 999,
+}
 
 const Canvas = (props) => {
   const canvasObject = useRef(null);
+  const p5Ref = useRef(null);
   const shapeStart = useRef({x : 0, y : 0});
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { socket, setSocket } = useContext(SocketContext);
+
+  // Setup socket listeners
+  useEffect(() => {
+    if (socket != null && p5Ref.current != null) {
+      console.log("creating board");
+      socket.on('drawing', data => newDrawing(p5Ref.current,data));
+      socket.on('update_canvas', data => {
+        for (var i = 0; i < data.canvasDrawings.length; i++) {
+          if (i === data.canvasDrawings.length - 1) {
+            console.log("Canvas done updating.");
+          }
+          // console.log(data.canvasDrawings[i]);
+          newDrawing(p5Ref.current, data.canvasDrawings[i]);
+        }
+        setIsLoading(false);
+      });
+      socket.emit('request_canvas');
+    }
+  }, [socket]);
 
   const setup = (p5, canvasParentRef) => {
     // use parent to render the canvas in this ref
     // (without that p5 will render the canvas outside of your component)
     canvasObject.current = p5.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT).parent('canvas-layout');
     p5.background(255);
-
-    socket = io.connect('/');
-    socket.on('drawing', data => newDrawing(p5,data));
-    socket.on('update_canvas', data => {
-      for (var i = 0; i < data.canvasDrawings.length; i++) {
-        if (i == data.canvasDrawings.length - 1) {
-          console.log("DONE");
-        }
-        // console.log(data.canvasDrawings[i]);
-        newDrawing(p5, data.canvasDrawings[i]);
-      }
-      setIsLoading(false);
-    });
-    socket.on('max_users', () => {
-      console.log("MAX USERS. FAILED TO CONNECT.");
-    });
-    socket.on('server_error', () => {
-      console.log("SERVER ERROR.");
-    })
+    p5Ref.current = p5;
+    console.log(socket);
   };
 
   const mouseDragged = (p5, event) => {
@@ -74,15 +99,16 @@ const Canvas = (props) => {
   const mouseReleased = (p5, event) => {
     if (isDragging) {
       var fillColor = `rgba(${props.color.r}, ${props.color.g}, ${props.color.b}, ${props.color.a})`;
+      var width, height, data;
       // Rectangle 
       if (props.shape === RECTANGLE) {
-        var width = p5.mouseX - shapeStart.current.x;
-        var height = p5.mouseY - shapeStart.current.y;
+        width = p5.mouseX - shapeStart.current.x;
+        height = p5.mouseY - shapeStart.current.y;
         p5.noStroke();
         p5.fill(fillColor);
         p5.rect(shapeStart.current.x, shapeStart.current.y, width, height);
         // Create rectangle object to be redrawn by other users
-        var data = {
+        data = {
           x: shapeStart.current.x,
           y: shapeStart.current.y,
           width: width,
@@ -95,8 +121,8 @@ const Canvas = (props) => {
         socket.emit('drawing', data);
       } else if (props.shape === TRIANGLE) {
       // Triangle 
-        var width = p5.mouseX - shapeStart.current.x;
-        var height = p5.mouseY - shapeStart.current.y;
+        width = p5.mouseX - shapeStart.current.x;
+        height = p5.mouseY - shapeStart.current.y;
         // Get points of the triangle
         var x1 = shapeStart.current.x;
         var x2 = shapeStart.current.x + (width / 2);
@@ -106,7 +132,7 @@ const Canvas = (props) => {
         p5.fill(fillColor);
         p5.triangle(x1, y1, x2, y2, p5.mouseX, p5.mouseY);
         // Create triangle object to be redrawn by other users
-        var data = {
+        data = {
           x1: x1,
           y1: y1, 
           x2: x2, 
@@ -121,8 +147,8 @@ const Canvas = (props) => {
         socket.emit('drawing', data);
       } else if (props.shape === ELLIPSE) {
       // Circle
-        var width = p5.mouseX - shapeStart.current.x;
-        var height = p5.mouseY - shapeStart.current.y;
+        width = p5.mouseX - shapeStart.current.x;
+        height = p5.mouseY - shapeStart.current.y;
         // Get radius center
         var x = shapeStart.current.x + (width / 2);
         var y = shapeStart.current.y + (height / 2);
@@ -130,7 +156,7 @@ const Canvas = (props) => {
         p5.fill(fillColor);
         p5.ellipse(x, y, width, height);
         // Create ellipse object to be redrawn by other users
-        var data = {
+        data = {
           x: x,
           y: y,
           width: width,
@@ -188,12 +214,6 @@ const Canvas = (props) => {
     p5.image(resized, 0, 0);
   }
 
-  window.addEventListener("beforeunload", (event) => 
-  {  
-    socket.emit('client_disconnect'); 
-    socket.disconnect(); 
-  });
-
   return (
     <div>
       <Sketch 
@@ -203,7 +223,11 @@ const Canvas = (props) => {
         mouseDragged={mouseDragged}
         mouseReleased={mouseReleased}
         windowResized={windowResized}/>
-      { isLoading && <h1>LOADING</h1>}
+      {isLoading && <div style={spinnerContainer}>
+        <div style={spinnerStyle}>
+          <PropagateLoader loading={isLoading} color={SPINNER_COLOR} size={20} />
+        </div>
+      </div>}
     </div>
   );
 };

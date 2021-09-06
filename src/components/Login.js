@@ -1,15 +1,43 @@
 import React, { useRef, useState, useEffect, useContext } from "react";
-import { Button } from "antd";
+import { Button, Typography } from "antd";
 import { GoogleOutlined } from "@ant-design/icons";
 import anime from "animejs";
 import image from "../ArtStack.svg";
-import { signInWithGoogle } from "../services/firebase";
+import { signInWithGoogle, logOut } from "../services/firebase";
 import { UserContext } from '../providers/UserProvider';
+import { SocketContext } from '../providers/SocketProvider';
 import { Redirect, useHistory } from 'react-router-dom';
+import io from "socket.io-client";
+import PropagateLoader from "react-spinners/PropagateLoader";
 
-const Login = () => {
-  const user = useContext(UserContext)
-  const [redirect, setredirect] = useState(null)
+const { Text } = Typography;
+
+const MAX_TIMEOUT = 5000;
+const SPINNER_COLOR = "#ffffff"; 
+const spinnerContainer = {
+  position: 'fixed',
+  height: '100%',
+  width: '100%',
+  left: 0,
+  top: 0,
+  backgroundColor: 'rgba(0,0,0,0.4)',
+  overflowX: 'hidden',
+  zIndex: 99,
+};
+const spinnerStyle = {
+  position: 'relative',
+  top: '40%' ,
+  width: '100%',
+  textAlign: 'center',
+  zIndex: 999,
+}
+
+const Login = (props) => {
+  const user = useContext(UserContext);
+  const { socket, setSocket } = useContext(SocketContext);
+  const [redirect, setRedirect] = useState(null);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   // const history = useHistory();
 
   useEffect(() => {
@@ -17,10 +45,53 @@ const Login = () => {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      setredirect('/landing')
+    // If the page is loading
+    if (isLoading) {
+      // Wait until MAX_TIMEOUT
+      setTimeout(() => {
+        // Disconnect the socket if there are any.
+        if (socket) {
+          socket.disconnect();
+          setSocket(null);
+        }
+        // Turn off the loader and show error message
+        setIsLoading(false);
+        // if (!error)
+        //   setError("Server failed to respond. Please try again.");
+      }, MAX_TIMEOUT);
     }
-  }, [user])
+  }, [isLoading]);
+
+  useEffect(() => {
+    // Assign a socket if no existing socket
+    if (user && !socket) {
+      setIsLoading(true);
+      // TODO: add a spinner
+      var socketObj = io.connect('/');
+      // Check if max user count has been exceeded
+      socketObj.on('max_users', () => {
+        logOut();
+        setIsLoading(false);
+        setError("Max users currently in room. Please try again later.");
+        console.log("MAX USERS. FAILED TO CONNECT.");
+      });
+      // Check if there was a server error
+      socketObj.on('server_error', () => {
+        logOut();
+        setIsLoading(false);
+        setError("An error occurred on the server. Please try again later.");
+        console.log("SERVER ERROR.");
+      });
+      // Upon server acknowledgement of connection, then redirect
+      socketObj.on('successful_connection', () => {
+        // Set socket in context to be accessible in other components
+        setSocket(socketObj);
+        setIsLoading(false);
+        // Redirect to landing
+        setRedirect('/landing');
+      });
+    }
+  }, [user]);
 
   if (redirect) {
     console.log("redirecting to", redirect);
@@ -195,15 +266,24 @@ const Login = () => {
           );
         })}
       </div>
-
+      <Text 
+        style={{ marginTop: "1rem" }} 
+        type="danger">
+          {error}
+      </Text>
       <Button
         size="large"
-        style={{ marginTop: "3rem" }}
+        style={{ marginTop: "1rem" }}
         icon={<GoogleOutlined />}
         onClick={signInWithGoogle}
       >
         Sign in with Google
       </Button>
+      {isLoading && <div style={spinnerContainer}>
+        <div style={spinnerStyle}>
+          <PropagateLoader loading={isLoading} color={SPINNER_COLOR} size={20} />
+        </div>
+      </div>}
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { UserContext } from "../providers/UserProvider";
+import { SocketContext } from '../providers/SocketProvider';
 import { Redirect } from "react-router-dom";
 import { logOut } from "../services/firebase";
 import {
@@ -53,25 +54,52 @@ const RECTANGLE = "rectangle";
 const TRIANGLE = "triangle";
 const ELLIPSE = "ellipse";
 
-const Landing = () => {
+const Landing = (props) => {
   const [brushSize, setBrushSize] = useState(25);
   const [visible, setVisible] = useState(false);
   const [color, setColor] = useState({ r: 0, g: 0, b: 0, a: 1 });
   const [shape, setShape] = useState("");
   const [mode, setMode] = useState(BRUSH_MODE);
   const user = useContext(UserContext);
-  const [redirect, setredirect] = useState(null);
+  const { socket, setSocket } = useContext(SocketContext);
+  const [redirect, setRedirect] = useState(null);
   // const history = useHistory();
 
   useEffect(() => {
-    console.log(user);
-    if (!user) {
-      setredirect("/");
+    console.log(user)
+    // Redirect back to login page if no user or socket connected
+    if (!user && !socket) {
+      console.log("Redirecting back to home.");
+      setRedirect("/");
     }
-  }, [user]);
+  }, [user, socket]);
+
+  // // Add event listener to window on first load
+  useEffect(() => {
+    window.addEventListener('beforeunload', closeSocket);
+    window.addEventListener('unload', () => {
+      console.log("DURING:", socket);
+      if (socket) {
+        socket.emit('client_disconnect'); 
+      }
+    });
+  }, [socket]);
+
+  const closeSocket = () => {
+    console.log("BEFORE:", socket);
+    if (socket) {
+      socket.emit('client_disconnect'); 
+    }
+  }
+
   if (redirect) {
     return <Redirect to={redirect} />;
-    // history.push(redirect)
+  }
+
+  const handleLogout = () => {
+    socket.emit('client_disconnect'); 
+    setSocket(null);
+    logOut(); 
   }
 
   return (
@@ -187,8 +215,8 @@ const Landing = () => {
           </Radio.Button>
         </Radio.Group>
 
-        <Divider orientation="left">Other Settings</Divider>
-        <Button block onClick={logOut}>
+        <Divider orientation="left">Other Setting</Divider>
+        <Button block onClick={handleLogout}>
           Logout
         </Button>
         <Button block>Save Canvas</Button>
@@ -202,7 +230,7 @@ const Landing = () => {
           justifyContent: "center",
         }}
       >
-        <Canvas brushSize={brushSize} color={color} mode={mode} shape={shape} />
+        <Canvas brushSize={brushSize} color={color} mode={mode} shape={shape} socket={props.socket}/>
       </Layout>
     </Layout>
   );
