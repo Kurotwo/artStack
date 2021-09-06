@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { UserContext } from "../providers/UserProvider";
 import { SocketContext } from '../providers/SocketProvider';
+import { P5Context } from '../providers/P5Provider';
 import { Redirect } from "react-router-dom";
 import { logOut } from "../services/firebase";
 import {
@@ -62,9 +63,10 @@ const Landing = (props) => {
   const [mode, setMode] = useState(BRUSH_MODE);
   const user = useContext(UserContext);
   const { socket, setSocket } = useContext(SocketContext);
+  const { p5Obj, setP5Obj } = useContext(P5Context);
   const [redirect, setRedirect] = useState(null);
   // const history = useHistory();
-
+  
   useEffect(() => {
     console.log(user)
     // Redirect back to login page if no user or socket connected
@@ -76,21 +78,8 @@ const Landing = (props) => {
 
   // // Add event listener to window on first load
   useEffect(() => {
-    window.addEventListener('beforeunload', closeSocket);
-    window.addEventListener('unload', () => {
-      console.log("DURING:", socket);
-      if (socket) {
-        socket.emit('client_disconnect'); 
-      }
-    });
+    window.addEventListener('beforeunload', handleLogout);
   }, [socket]);
-
-  const closeSocket = () => {
-    console.log("BEFORE:", socket);
-    if (socket) {
-      socket.emit('client_disconnect'); 
-    }
-  }
 
   if (redirect) {
     return <Redirect to={redirect} />;
@@ -100,6 +89,11 @@ const Landing = (props) => {
     socket.emit('client_disconnect'); 
     setSocket(null);
     logOut(); 
+  }
+
+  const handleSaveCanvas = () => {
+    console.log(p5Obj);
+    p5Obj.saveCanvas('animoChat');
   }
 
   return (
@@ -219,7 +213,7 @@ const Landing = (props) => {
         <Button block onClick={handleLogout}>
           Logout
         </Button>
-        <Button block>Save Canvas</Button>
+        <Button block onClick={handleSaveCanvas}>Save Canvas</Button>
       </Drawer>
       <Layout
         id="canvas-layout"
