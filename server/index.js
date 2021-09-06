@@ -1,3 +1,4 @@
+var AsyncLock = require('async-lock');
 const express = require('express');
 const app = express();
 const http = require('http').Server(app);
@@ -17,13 +18,38 @@ var serverCanvas = {
   canvasDrawings: []
 };
 
-function onConnection(socket){
-  console.log("Socket connected!")
-  socket.on('drawing', (data) => {
-    serverCanvas.canvasDrawings.push(data);
-    socket.broadcast.emit('drawing', data)
-  });
-  socket.emit('updatecanvas', serverCanvas);
+const SOCKET_MAX = 3;
+var socketCounter = 0;
+// Set max time for occupation to 3s
+var lock = new AsyncLock({maxOccupationTime: 3000}); 
+
+// When a new socket connects
+function onConnection(socket) {
+  // Acquire shared lock 
+  lock.acquire('socket_lock', function(done) {
+    console.log("Socket connected!");
+    if (socketCounter < SOCKET_MAX) {
+      socketCounter++;
+      socket.on('drawing', (data) => {
+        serverCanvas.canvasDrawings.push(data);
+        socket.broadcast.emit('drawing', data)
+      });
+      socket.on('client_disconnect', () => {
+        console.log("Client disconnected.");
+      });
+      socket.emit('update_canvas', serverCanvas);
+    }
+    else {
+      socket.emit('max_users'); 
+      socket.disconnect(); 
+    }
+    done(err, ret);
+  }, function(err, ret) {
+    socket.disconnect(); 
+    // TODO: Make emit to socket 
+    console.log("Socket error in connecting."); 
+});
+  
 }
 
 io.on('connection', onConnection);

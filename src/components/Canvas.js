@@ -25,11 +25,14 @@ const Canvas = (props) => {
 
     socket = io.connect('/');
     socket.on('drawing', data => newDrawing(p5,data));
-    socket.on('updatecanvas', data => {
+    socket.on('update_canvas', data => {
       for (var i = 0; i < data.canvasDrawings.length; i++) {
-        console.log(data.canvasDrawings[i]);
+        // console.log(data.canvasDrawings[i]);
         newDrawing(p5, data.canvasDrawings[i]);
       }
+    });
+    socket.on('max_users', () => {
+      console.log("MAX USERS. FAILED TO CONNECT.");
     });
   };
 
@@ -176,6 +179,12 @@ const Canvas = (props) => {
 
     p5.image(resized, 0, 0);
   }
+
+  window.addEventListener("beforeunload", (event) => 
+  {  
+    socket.emit('client_disconnect'); 
+    socket.disconnect(); 
+  });
 
   return (
     <div>
