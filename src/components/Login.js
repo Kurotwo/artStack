@@ -44,17 +44,6 @@ const Login = (props) => {
     animate();
   }, []);
 
-  // Add event listener to window on first load
-  useEffect(() => {
-    window.addEventListener('beforeunload', () => {
-      console.log(socket);
-      if (socket) {
-        socket.emit('client_disconnect'); 
-        socket.disconnect();
-      }
-    });
-  }, [socket]);
-
   useEffect(() => {
     // If the page is loading
     if (isLoading) {
@@ -67,8 +56,8 @@ const Login = (props) => {
         }
         // Turn off the loader and show error message
         setIsLoading(false);
-        if (!error)
-          setError("Server failed to respond. Please try again.");
+        // if (!error)
+        //   setError("Server failed to respond. Please try again.");
       }, MAX_TIMEOUT);
     }
   }, [isLoading]);
