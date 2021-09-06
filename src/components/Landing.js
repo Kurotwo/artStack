@@ -78,7 +78,10 @@ const Landing = (props) => {
 
   // // Add event listener to window on first load
   useEffect(() => {
-    window.addEventListener('beforeunload', handleLogout);
+    if (socket) {
+      window.removeEventListener('beforeunload', handleLogout);
+      window.addEventListener('beforeunload', handleLogout);
+    }
   }, [socket]);
 
   if (redirect) {

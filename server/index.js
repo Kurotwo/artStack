@@ -58,7 +58,7 @@ function onConnection(socket) {
           socket.broadcast.emit('drawing', data)
         });
         // Listen to client disconnection
-        socket.on('client_disconnect', () => {
+        socket.on('disconnect', () => {
           console.log("Disconnect attempt");
           onDisconnect(socket);
         });
