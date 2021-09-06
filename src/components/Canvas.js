@@ -15,7 +15,8 @@ const CANVAS_WIDTH = 1000;
 const Canvas = (props) => {
   const canvasObject = useRef(null);
   const shapeStart = useRef({x : 0, y : 0});
-  const [isDragging, setIsDragging] = useState(false)
+  const [isDragging, setIsDragging] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const setup = (p5, canvasParentRef) => {
     // use parent to render the canvas in this ref
@@ -27,13 +28,20 @@ const Canvas = (props) => {
     socket.on('drawing', data => newDrawing(p5,data));
     socket.on('update_canvas', data => {
       for (var i = 0; i < data.canvasDrawings.length; i++) {
+        if (i == data.canvasDrawings.length - 1) {
+          console.log("DONE");
+        }
         // console.log(data.canvasDrawings[i]);
         newDrawing(p5, data.canvasDrawings[i]);
       }
+      setIsLoading(false);
     });
     socket.on('max_users', () => {
       console.log("MAX USERS. FAILED TO CONNECT.");
     });
+    socket.on('server_error', () => {
+      console.log("SERVER ERROR.");
+    })
   };
 
   const mouseDragged = (p5, event) => {
@@ -195,6 +203,7 @@ const Canvas = (props) => {
         mouseDragged={mouseDragged}
         mouseReleased={mouseReleased}
         windowResized={windowResized}/>
+      { isLoading && <h1>LOADING</h1>}
     </div>
   );
 };
