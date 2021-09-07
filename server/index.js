@@ -32,12 +32,12 @@ function onDisconnect(socket) {
     try {
       socket.disconnect();
       console.log("Client disconnected.");
+      socketCounter--;
       done(SUCCESS_CODE);
     } catch (err) {
       done(new Error(err));
     }
   }, function(result) {
-    socketCounter--;
     console.log("Connected Sockets: ", socketCounter);
     if (result !== SUCCESS_CODE) {
       console.log("Socket error in disconnecting.");
@@ -69,6 +69,7 @@ function onConnection(socket) {
         });
         // Inform client that they are connected
         socket.emit('successful_connection');
+        socketCounter++;
         done(SUCCESS_CODE);
       }
       else {
@@ -84,7 +85,6 @@ function onConnection(socket) {
     }
   }, (result) => {
     if (result === SUCCESS_CODE) {
-      socketCounter++;
       console.log("Socket connected!");
       console.log("Connected Sockets: ", socketCounter);
     } else if (result instanceof Error) {
