@@ -21,7 +21,7 @@ var serverCanvas = {
 
 const SUCCESS_CODE = "success";
 // Set a max socket limit
-const SOCKET_MAX = 2;
+const SOCKET_MAX = 100;
 var socketCounter = 0;
 // Set max time for lock occupation to 3s (i.e. time spent in lock)
 var lock = new AsyncLock({maxOccupationTime: 3000}); 

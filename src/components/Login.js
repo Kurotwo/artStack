@@ -38,6 +38,7 @@ const Login = (props) => {
   const [redirect, setRedirect] = useState(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loginTrigger, setLoginTrigger] = useState(false);
   // const history = useHistory();
 
   useEffect(() => {
@@ -65,7 +66,8 @@ const Login = (props) => {
 
   useEffect(() => {
     // Assign a socket if no existing socket
-    if (user && !socket) {
+    // if (user && !socket) {
+    if (loginTrigger && !socket) {
       setIsLoading(true);
       // TODO: add a spinner
       var socketObj = io.connect('/');
@@ -92,7 +94,7 @@ const Login = (props) => {
         setRedirect('/landing');
       });
     }
-  }, [user]);
+  }, [user, loginTrigger]);
 
   if (redirect) {
     console.log("redirecting to", redirect);
@@ -276,7 +278,9 @@ const Login = (props) => {
         size="large"
         style={{ marginTop: "1rem" }}
         icon={<GoogleOutlined />}
-        onClick={signInWithGoogle}
+        onClick={() => {
+          setLoginTrigger(true)
+        }}
       >
         Sign in with Google
       </Button>
