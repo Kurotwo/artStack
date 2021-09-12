@@ -12,7 +12,7 @@ import PropagateLoader from "react-spinners/PropagateLoader";
 
 const { Text } = Typography;
 
-const MAX_TIMEOUT = 5000;
+const MAX_TIMEOUT = 10000;
 const SPINNER_COLOR = "#ffffff"; 
 const spinnerContainer = {
   position: 'fixed',
@@ -38,6 +38,8 @@ const Login = (props) => {
   const [redirect, setRedirect] = useState(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const isLoadingRef = useRef(false);
+  const errorRef = useRef("");
   // const history = useHistory();
 
   useEffect(() => {
@@ -48,18 +50,7 @@ const Login = (props) => {
     // If the page is loading
     if (isLoading) {
       // Wait until MAX_TIMEOUT
-      setTimeout(() => {
-        // Disconnect the socket if there are any.
-        if (socket) {
-          socket.emit("client_disconnect");
-          socket.disconnect();
-          setSocket(null);
-        }
-        // Turn off the loader and show error message
-        setIsLoading(false);
-        // if (!error)
-        //   setError("Server failed to respond. Please try again.");
-      }, MAX_TIMEOUT);
+      setTimeout(checkLoading, MAX_TIMEOUT);
     }
   }, [isLoading]);
 
@@ -67,12 +58,14 @@ const Login = (props) => {
     // Assign a socket if no existing socket
     if (user && !socket) {
       setIsLoading(true);
+      isLoadingRef.current = true;
       // TODO: add a spinner
       var socketObj = io.connect('/');
       // Check if max user count has been exceeded
       socketObj.on('max_users', () => {
         logOut();
         setIsLoading(false);
+        isLoadingRef.current = false;
         setError("Max users currently in room. Please try again later.");
         console.log("MAX USERS. FAILED TO CONNECT.");
       });
@@ -80,6 +73,7 @@ const Login = (props) => {
       socketObj.on('server_error', () => {
         logOut();
         setIsLoading(false);
+        isLoadingRef.current = false;
         setError("An error occurred on the server. Please try again later.");
         console.log("SERVER ERROR.");
       });
@@ -88,6 +82,7 @@ const Login = (props) => {
         // Set socket in context to be accessible in other components
         setSocket(socketObj);
         setIsLoading(false);
+        isLoadingRef.current = false;
         // Redirect to landing
         setRedirect('/landing');
       });
@@ -98,6 +93,22 @@ const Login = (props) => {
     console.log("redirecting to", redirect);
     return <Redirect to={"/landing"}/>
     // history.push(redirect)
+  }
+
+  function checkLoading() {
+    // Check if the page is still loading after the timeout
+    if (isLoadingRef.current) {
+      // Disconnect the socket if there are any.
+      if (socket) {
+        socket.emit("client_disconnect");
+        socket.disconnect();
+        setSocket(null);
+      }
+      // Turn off the loader and show error message
+      setIsLoading(false);
+      isLoadingRef.current = false;
+      setError("Server failed to respond. Please try again.");
+    } 
   }
 
   function animate() {
